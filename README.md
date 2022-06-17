@@ -1,36 +1,19 @@
-# qsolve
-QSolve
-
 # QSolve
 
-# H1
-## H2
-### H3
-#### H4
-##### H5
-###### H6
+QSolve provides numerical methods for the simulation of ultracold quantum gases
+at zero and finite temperature.
 
-Alternatively, for H1 and H2, an underline-ish style:
+## Requirements
 
-Alt-H1
-======
+* Operating System: Linux 64 Bit
+* Hardware: Multicore CPU or GPU (CUDA)
+* Python 3.9
 
-Alt-H2
-------
+## Development Configuration
 
-1. First ordered list item
-2. Another item
-⋅⋅* Unordered sub-list. 
-1. Actual numbers don't matter, just that it's a number
-⋅⋅1. Ordered sub-list
-4. And another item.
+* Operating System: Ubuntu 20.04.4 LTS (Focal Fossa)
+* Hardware: Nvidia Quadro GV100 or NVIDIA Titan V
 
-⋅⋅⋅You can have properly indented paragraphs within list items. Notice the blank line above, and the leading spaces (at least one, but we'll use three here to also align the raw Markdown).
-
-⋅⋅⋅To have a line break without a paragraph, you will need to use two trailing spaces.⋅⋅
-⋅⋅⋅Note that this line is separate, but within the same paragraph.⋅⋅
-⋅⋅⋅(This is contrary to the typical GFM line break behaviour, where trailing spaces are not required.)
-
-* Unordered list can use asterisks
-- Or minuses
-+ Or pluses
+All numerical methods are implemented using double precision floating point operations (FP64).
+Please note that FP64 performance on conventional GPUs is highly restricted 
+in comparison with professional GPUs like the ones listed above.
