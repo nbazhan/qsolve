@@ -14,7 +14,7 @@ setuptools.setup(
     # long_description=read('README.md'),
     # long_description=long_description,
     # license="MIT",
-    keywords="ultracold atoms, simulations, Gross-Pitaevskii, stochastic, thermal state sampling, time of flight",
+    keywords="ultracold atoms, simulations, Gross-Pitaevskii, thermal state sampling, time of flight",
     # url = "http://packages.python.org/an_example_pypi_project",
     # package_dir={'':'pycal'},
     # packages=setuptools.find_packages(),
