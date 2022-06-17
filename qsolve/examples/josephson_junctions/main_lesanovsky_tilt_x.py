@@ -51,7 +51,7 @@ plt.close('all')
 # -------------------------------------------------------------------------------------------------
 temperature = True
 
-quickstart = False
+quickstart = True
 
 visualization = True
 
