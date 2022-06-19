@@ -3,20 +3,34 @@ from qsolve.core import qsolve_core
 
 def compute_ground_state_solution(self, kwargs):
 
-    tau_0 = kwargs["tau_0"] / self.units.unit_time
+    tau = kwargs["tau"] / self.units.unit_time
 
     n_iter = kwargs["n_iter"]
 
+    if "adaptive_tau" in kwargs:
+
+        adaptive_tau = kwargs["adaptive_tau"]
+
+    else:
+
+        adaptive_tau = True
+
     N = kwargs["N"]
 
-    self.psi_0 = qsolve_core.compute_ground_state_solution_gpe_3d(
+    psi_0, vec_res, vec_iter = qsolve_core.compute_ground_state_solution_gpe_3d(
         self.V,
         self.dx,
         self.dy,
         self.dz,
-        tau_0,
+        tau,
+        adaptive_tau,
         n_iter,
         N,
         self.hbar,
         self.m_atom,
         self.g)
+
+    self.psi_0 = psi_0
+
+    self.vec_res_ground_state_computation = vec_res
+    self.vec_iter_ground_state_computation = vec_iter

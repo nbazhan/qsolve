@@ -345,6 +345,14 @@ def get(self, identifier, kwargs):
 
             return z_f_tof_free_schroedinger
 
+    elif identifier == "vec_res_ground_state_computation":
+
+        return self.vec_res_ground_state_computation.cpu().numpy()
+
+    elif identifier == "vec_iter_ground_state_computation":
+
+        return self.vec_iter_ground_state_computation.cpu().numpy()
+
     else:
 
         message = 'get(identifier, **kwargs): identifier \'{0:s}\' not supported'.format(identifier)

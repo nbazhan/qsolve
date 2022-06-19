@@ -4,6 +4,7 @@ from qsolve.potentials.potentials_3d import PotentialLesanovskyXYTiltX
 from qsolve.potentials.potentials_3d import PotentialLesanovskyXYTiltXBoxZ
 from qsolve.potentials.potentials_3d import PotentialHarmonicXYLatticeZ
 from qsolve.potentials.potentials_3d import PotentialHarmonicXYGaussianZ
+from qsolve.potentials.potentials_3d import PotentialHarmonic
 
 
 def init_potential(self, params_user):
@@ -51,6 +52,10 @@ def init_potential(self, params_user):
     elif name == "harmonic_xy_gaussian_z":
 
         self.potential = PotentialHarmonicXYGaussianZ(params_solver, params_user)
+
+    elif name == "harmonic":
+
+        self.potential = PotentialHarmonic(params_solver, params_user)
 
     else:
 

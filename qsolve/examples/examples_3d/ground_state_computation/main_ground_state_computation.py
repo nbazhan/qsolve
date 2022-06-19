@@ -4,8 +4,6 @@ import mkl
 
 import os
 
-import h5py
-
 import numpy as np
 
 from scipy import constants
@@ -13,11 +11,8 @@ from scipy import constants
 import matplotlib.pyplot as plt
 
 from figures.figure_main.figure_main import FigureMain
-from figures.figure_tof.figure_tof import FigureTof
-from figures.figure_tof_extended.figure_tof_extended import FigureTofExtended
 
 from evaluation import eval_data
-from evaluation import eval_data_tof
 
 # -------------------------------------------------------------------------------------------------
 num_threads_cpu = 8
@@ -51,8 +46,6 @@ plt.close('all')
 # -------------------------------------------------------------------------------------------------
 temperature = True
 
-quickstart = True
-
 visualization = True
 
 time_of_flight = True
@@ -71,66 +64,36 @@ export_psi_of_times_analysis = False
 # =================================================================================================
 N = 3500
 
-u1_final = 0.56
-
-if quickstart:
-
-    gamma_tilt_ref = 0.0
-
-    # xi_ext = 0.420
-    xi_ext = 0.350
-
-else:
-
-    gamma_tilt_ref = 4.1e-26
-
-    xi_ext = 0.0
-
-
-t_final = 80e-3
-
-if temperature:
-
-    T = 20e-9
-
-else:
-
-    T = 0e-9
-
 m_Rb_87 = 87 * amu
 
 m_atom = m_Rb_87
 
 a_s = 5.24e-9
 
-Jx = 2 * 28
-Jy = 2 * 12
-Jz = 4 * 60
+x_min = -5e-6
+x_max = +5e-6
 
-dt = 0.0025e-3
+y_min = -5e-6
+y_max = +5e-6
+
+z_min = -10e-6
+z_max = +10e-6
+
+Jx = 50
+Jy = 50
+Jz = 100
+
+t_final = 4e-3
+
+dt = 0.001e-3
 
 n_mod_times_analysis = 100
 
-x_min = -2.8e-6
-x_max = +2.8e-6
-
-y_min = -1.2e-6
-y_max = +1.2e-6
-
-z_min = -60e-6
-z_max = +60e-6
-
 params_potential = {
-    "name": 'lesanovsky_tilt_x',
-    "g_F": -1/2,
-    "m_F": -1,
-    "m_F_prime": -1,
-    "omega_perp": 2 * np.pi * 3e3,
-    "omega_para": 2 * np.pi * 22.5,
-    "omega_delta_detuning": -2 * np.pi * 50e3,
-    "omega_trap_bottom": 2 * np.pi * 1216e3,
-    "omega_rabi_ref": 2 * np.pi * 575e3,
-    "gamma_tilt_ref": gamma_tilt_ref
+    "name": 'harmonic',
+    "omega_x": 2 * np.pi * 200,
+    "omega_y": 2 * np.pi * 100,
+    "omega_z": 2 * np.pi * 50
 }
 
 params_figure_main = {
@@ -267,7 +230,7 @@ times_analysis = times[0::n_mod_times_analysis]
 
 n_times_analysis = times_analysis.size
 
-assert (times_analysis[-1] == t_final)
+assert (abs(times_analysis[-1] - t_final) < 1e-14)
 # -------------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
@@ -283,58 +246,8 @@ times_tof = times_tof[indices_tmp]
 # init control inputs
 # =================================================================================================
 
-if quickstart:
-
-    t_idle = 5e-3
-
-    t_phase_imprint_part_1 = 1.5e-3
-    t_phase_imprint_part_2 = 1.5e-3
-
-    t0 = 0.0
-    t1 = t0 + t_idle
-    t2 = t1 + t_phase_imprint_part_1
-    t3 = t2 + t_phase_imprint_part_2
-
-    vec_t = np.array([t0, t1, t2, t3])
-
-    vec_u2 = np.array([0, 0, 1, 0])
-
-    u1_of_times = u1_final * np.ones_like(times)
-
-    # u2_of_times = np.interp(times, vec_t, vec_u2)
-
-    u2_of_times = np.zeros_like(times)
-
-else:
-
-    t_ramp_up = 21.5e-3
-
-    t_phase_imprint_part_1 = 1.5e-3
-    t_phase_imprint_part_2 = 1.5e-3
-    t_ramp_down = 3.0e-3
-    t_help = 10.0e-3
-
-    t0 = 0.0
-    t1 = t0 + t_ramp_up
-    t2 = t1 + t_phase_imprint_part_1
-    t3 = t2 + t_phase_imprint_part_2
-    t4 = t3 + t_ramp_down
-    t5 = t4 + t_help
-
-    u1_0 = 0.0
-    u1_1 = 0.65
-    u1_2 = 0.65
-    u1_3 = 0.65
-    u1_4 = u1_final
-    u1_5 = u1_final
-
-    vec_t = np.array([t0, t1, t2, t3, t4, t5])
-
-    vec_u1 = np.array([u1_0, u1_1, u1_2, u1_3, u1_4, u1_5])
-    vec_u2 = np.array([0, 0, 1, 0, 0, 0])
-
-    u1_of_times = np.interp(times, vec_t, vec_u1)
-    u2_of_times = np.interp(times, vec_t, vec_u2)
+u1_of_times = np.ones_like(times)
+u2_of_times = np.ones_like(times)
 
 u_of_times = np.zeros((2, n_times))
 
@@ -353,14 +266,18 @@ u2_0 = u2_of_times[0]
 solver.set_V(u=[u1_0, u2_0])
 # -------------------------------------------------------------------------------------------------
 
+
 # -------------------------------------------------------------------------------------------------
-solver.compute_ground_state_solution(N=N, n_iter=5000, tau_0=0.005e-3)
+solver.compute_ground_state_solution(N=N, n_iter=5000, tau=0.005e-3, adaptive_tau=True)
 
 psi_0 = solver.get('psi_0')
 
 N_psi_0 = solver.compute_n_atoms('psi_0')
 mue_psi_0 = solver.compute_chemical_potential('psi_0')
 E_psi_0 = solver.compute_E_total('psi_0')
+
+vec_res = solver.get('vec_res_ground_state_computation')
+vec_iter = solver.get('vec_iter_ground_state_computation')
 
 print('N_psi_0 = {:1.16e}'.format(N_psi_0))
 print('mue_psi_0 / h: {0:1.6} kHz'.format(mue_psi_0 / (1e3 * (2 * pi * hbar))))
@@ -375,130 +292,57 @@ print()
 
 solver.set_psi('numpy', array=psi_0)
 
-N_psi = solver.compute_n_atoms('psi')
-mue_psi = solver.compute_chemical_potential('psi')
-E_psi = solver.compute_E_total('psi')
-
-print('N_psi = {:1.16e}'.format(N_psi))
-print('mue_psi / h: {0:1.6} kHz'.format(mue_psi / (1e3 * (2 * pi * hbar))))
-print('E_psi / (N_psi*h): {0:1.6} kHz'.format(E_psi / (1e3 * (2 * pi * hbar * N_psi))))
-print()
-
 
 # =================================================================================================
 # init figure
 # =================================================================================================
 
-if visualization:
+# -------------------------------------------------------------------------------------------------
+figure_main = FigureMain(x, y, z, times, params_figure_main)
 
-    # ---------------------------------------------------------------------------------------------
-    figure_main = FigureMain(x, y, z, times, params_figure_main)
+figure_main.fig_control_inputs.update_u(u1_of_times, u2_of_times)
 
-    figure_main.fig_control_inputs.update_u(u1_of_times, u2_of_times)
+figure_main.fig_control_inputs.update_t(0.0)
+# -------------------------------------------------------------------------------------------------
 
-    figure_main.fig_control_inputs.update_t(0.0)
-    # ---------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------
+data = eval_data(solver)
 
-    # ---------------------------------------------------------------------------------------------
-    data = eval_data(solver)
+figure_main.update_data(data)
 
-    figure_main.update_data(data)
-
-    figure_main.redraw()
-    # ---------------------------------------------------------------------------------------------
-
-else:
-
-    figure_main = None
+figure_main.redraw()
+# -------------------------------------------------------------------------------------------------
 
 
-# =================================================================================================
-# thermal state sampling
-# =================================================================================================
+# -------------------------------------------------------------------------------------------------
+fig = plt.figure("figure_residual_error", figsize=(6, 5), facecolor="white")
 
-if T > 0:
+gridspec = fig.add_gridspec(
+        nrows=1, ncols=1,
+        left=0.175, right=0.95,
+        bottom=0.125, top=0.95,
+        wspace=0.5,
+        hspace=0.7,
+        width_ratios=[1],
+        height_ratios=[1])
 
-    solver.init_sgpe_z_eff(
-        T_temp_des=T,
-        mue_des=mue_psi_0,
-        gamma=0.1,
-        dt=dt,
-        filter_z1=-45e-6,
-        filter_z2=+45e-6,
-        filter_z_s=1.0e-6
-    )
+ax_00 = fig.add_subplot(gridspec[0, 0])
 
-    n_sgpe_max = 10000
+ax_00.set_yscale('log')
 
-    n_sgpe_inc = 1000
+x_values = vec_iter[1:]
+y_values = vec_res[1:]
 
-    n_sgpe = 0
+plt.plot(x_values, y_values, linewidth=1, linestyle='-', color='k')
 
-    while n_sgpe < n_sgpe_max:
+ax_00.set_xlim(0, 1.1 * x_values[-1])
+ax_00.set_ylim(1e-8, 1)
 
-        data = eval_data(solver)
+plt.xlabel(r'number of iterations')
+plt.ylabel(r'relative residual error')
 
-        print('----------------------------------------------------------------------------------------')
-        print('n_sgpe: {0:4d} / {1:4d}'.format(n_sgpe, n_sgpe_max))
-        print()
-        print('N:      {0:1.4f}'.format(data.N))
-        print('----------------------------------------------------------------------------------------')
-        print()
-
-        if visualization:
-
-            # -----------------------------------------------------------------------------------------
-            figure_main.update_data(data)
-
-            figure_main.redraw()
-            # -----------------------------------------------------------------------------------------
-
-        # ---------------------------------------------------------------------------------------------
-        # apply thermal state sampling process via sgpe for n_sgpe_inc time steps
-
-        solver.propagate_sgpe_z_eff(n_inc=n_sgpe_inc)
-        # ---------------------------------------------------------------------------------------------
-
-        n_sgpe = n_sgpe + n_sgpe_inc
-
-
-# =================================================================================================
-# imprint relative phase difference by hand
-# =================================================================================================
-
-if quickstart:
-
-    psi = solver.get('psi')
-
-    x = solver.get('x')
-
-    phi_ext = 1.1 * xi_ext * pi
-
-    s0 = 0.125e-6
-
-    phase_shift_x = (0.5 * phi_ext) * (2 * np.arctan(x / s0) / pi)
-
-    visualize_phase_shift_x = True
-
-    if visualize_phase_shift_x:
-
-        fig_phase_shift_x = plt.figure("figure_phase_shift_x", figsize=(6, 5), facecolor="white")
-
-        plt.plot(x / 1e-6, phase_shift_x / pi, linewidth=1, linestyle='-', color='k')
-
-        plt.xlim([1.05 * x_min / 1e-6, 1.05 * x_max / 1e-6])
-        plt.ylim([-0.4, 0.4])
-
-        plt.xlabel(r'$x$ in $\mu$m')
-        plt.ylabel(r'$\phi\; / \;\pi$')
-
-        plt.grid(b=True, which='major', color='k', linestyle='-', linewidth=0.5)
-
-    phase_shift = phase_shift_x[:, np.newaxis, np.newaxis]
-
-    psi = np.exp(-1j * phase_shift) * psi
-
-    solver.set_psi('numpy', array=psi)
+plt.grid(visible=True, which='major', color='k', linestyle='-', linewidth=0.5)
+# -------------------------------------------------------------------------------------------------
 
 
 # =================================================================================================
@@ -532,25 +376,6 @@ stop = False
 
 n = 0
 
-if time_of_flight:
-
-    solver.init_time_of_flight(params_tof)
-
-    x_tof_gpe = solver.get('x_tof_free_gpe')
-    y_tof_gpe = solver.get('y_tof_free_gpe')
-    z_tof_gpe = solver.get('z_tof_free_gpe')
-
-    x_tof_final = solver.get('x_tof_final')
-    y_tof_final = solver.get('y_tof_final')
-    z_tof_final = solver.get('z_tof_final')
-
-    figure_tof = FigureTof(x_tof_gpe, y_tof_gpe, z_tof_gpe, x_tof_final, y_tof_final, z_tof_final)
-    # figure_tof = FigureTofExtended(x_tof_gpe, y_tof_gpe, z_tof_gpe, x_tof_final, y_tof_final, z_tof_final)
-
-else:
-
-    figure_tof = None
-
 while True:
 
     t = times[n]
@@ -561,8 +386,8 @@ while True:
 
         data_time_evolution.psi_of_times_analysis[nr_times_analysis, :] = data.psi
 
-    data_time_evolution.global_phase_difference_of_times_analysis[nr_times_analysis] = data.global_phase_difference
-    data_time_evolution.number_imbalance_of_times_analysis[nr_times_analysis] = data.number_imbalance
+    # data_time_evolution.global_phase_difference_of_times_analysis[nr_times_analysis] = data.global_phase_difference
+    # data_time_evolution.number_imbalance_of_times_analysis[nr_times_analysis] = data.number_imbalance
 
     data_time_evolution.nr_times_analysis = nr_times_analysis
 
@@ -579,7 +404,7 @@ while True:
         # -----------------------------------------------------------------------------------------
         figure_main.update_data(data)
 
-        figure_main.update_data_time_evolution(data_time_evolution)
+        # figure_main.update_data_time_evolution(data_time_evolution)
 
         figure_main.fig_control_inputs.update_t(t)
 
@@ -594,29 +419,12 @@ while True:
             nr_frame_figure_main = nr_frame_figure_main + 1
         # -----------------------------------------------------------------------------------------
 
-    if time_of_flight:
-
-        if t in times_tof:
-
-            solver.compute_time_of_flight()
-
-            data_tof = eval_data_tof(solver)
-
-            figure_tof.update_data(data_tof)
-
-            if export_frames_figure_tof:
-
-                filepath = path_frames_figure_tof + 'frame_' + str(nr_frame_figure_tof).zfill(5) + '.png'
-
-                figure_tof.export(filepath)
-
-                nr_frame_figure_tof = nr_frame_figure_tof + 1
-
     nr_times_analysis = nr_times_analysis + 1
 
     if n < n_times - n_inc:
 
-        solver.propagate_gpe(n_start=n, n_inc=n_inc, mue_shift=mue_psi_0)
+        # solver.propagate_gpe(n_start=n, n_inc=n_inc, mue_shift=mue_psi_0)
+        solver.propagate_gpe(n_start=n, n_inc=n_inc, mue_shift=0.0)
 
         n = n + n_inc
 
@@ -624,66 +432,6 @@ while True:
 
         break
 
-if export_hdf5:
-
-    # ---------------------------------------------------------------------------------------------
-    # Create file
-    f_hdf5 = h5py.File(filepath_f_hdf5, "w")
-
-    # Create file, fail if exists
-    # f_hdf5 = h5py.File(filepath_f_hdf5, "x")
-    # ---------------------------------------------------------------------------------------------
-
-    # ---------------------------------------------------------------------------------------------
-    f_hdf5.create_dataset("hbar", data=hbar)
-
-    f_hdf5.create_dataset("N", data=N)
-
-    f_hdf5.create_dataset("x", data=x)
-    f_hdf5.create_dataset("y", data=y)
-    f_hdf5.create_dataset("z", data=z)
-
-    f_hdf5.create_dataset("Jz", data=Jz)
-    # ---------------------------------------------------------------------------------------------
-
-    # ---------------------------------------------------------------------------------------------
-    tmp = f_hdf5.create_group("time_evolution")
-
-    if export_psi_of_times_analysis:
-
-        tmp.create_dataset("psi_of_times_analysis", data=data_time_evolution.psi_of_times_analysis, dtype=np.complex128)
-
-    tmp.create_dataset("times", data=times)
-    tmp.create_dataset("dt", data=dt)
-    tmp.create_dataset("n_mod_times_analysis", data=n_mod_times_analysis)
-    tmp.create_dataset("times_analysis", data=times_analysis)
-    # ---------------------------------------------------------------------------------------------
-
-    # ---------------------------------------------------------------------------------------------
-    f_hdf5.close()
-    # ---------------------------------------------------------------------------------------------
-
-    # ---------------------------------------------------------------------------------------------
-    f_hdf5 = h5py.File(filepath_f_hdf5, 'r')
-
-    list_all_items = True
-
-    if list_all_items:
-
-        def print_attrs(name, obj):
-
-            print(name)
-
-            for key, val in obj.attrs.items():
-
-                print("    %s: %s" % (key, val))
-
-
-        f_hdf5.visititems(print_attrs)
-
-        print()
-        print()
-    # ---------------------------------------------------------------------------------------------
 
 plt.ioff()
 plt.show()

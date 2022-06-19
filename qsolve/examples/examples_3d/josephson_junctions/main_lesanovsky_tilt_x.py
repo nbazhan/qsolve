@@ -13,8 +13,11 @@ from scipy import constants
 import matplotlib.pyplot as plt
 
 from figures.figure_main.figure_main import FigureMain
+from figures.figure_tof.figure_tof import FigureTof
+from figures.figure_tof_extended.figure_tof_extended import FigureTofExtended
 
 from evaluation import eval_data
+from evaluation import eval_data_tof
 
 # -------------------------------------------------------------------------------------------------
 num_threads_cpu = 8
@@ -51,18 +54,22 @@ temperature = True
 quickstart = False
 
 visualization = True
+
+time_of_flight = False
 # -------------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
 export_frames_figure_main = False
+export_frames_figure_tof = False
 
 export_hdf5 = False
 
 export_psi_of_times_analysis = False
 # -------------------------------------------------------------------------------------------------
 
-# -------------------------------------------------------------------------------------------------
-N = 8100
+
+# =================================================================================================
+N = 3500
 
 u1_final = 0.56
 
@@ -92,15 +99,17 @@ else:
 
 m_Rb_87 = 87 * amu
 
-Jx = 2*28
-Jy = 2*12
-Jz = 4*60
+m_atom = m_Rb_87
+
+a_s = 5.24e-9
+
+Jx = 2 * 28
+Jy = 2 * 12
+Jz = 4 * 60
 
 dt = 0.0025e-3
 
 n_mod_times_analysis = 100
-
-omega_perp = 2 * np.pi * 3e3
 
 x_min = -2.8e-6
 x_max = +2.8e-6
@@ -111,33 +120,76 @@ y_max = +1.2e-6
 z_min = -60e-6
 z_max = +60e-6
 
-a_s = 5.24e-9
-
 params_potential = {
-    "name": 'lesanovsky_xy_tilt_x_box_z',
+    "name": 'lesanovsky_tilt_x',
     "g_F": -1/2,
     "m_F": -1,
     "m_F_prime": -1,
-    "omega_perp": omega_perp,
+    "omega_perp": 2 * np.pi * 3e3,
     "omega_para": 2 * np.pi * 22.5,
     "omega_delta_detuning": -2 * np.pi * 50e3,
     "omega_trap_bottom": 2 * np.pi * 1216e3,
     "omega_rabi_ref": 2 * np.pi * 575e3,
-    "gamma_tilt_ref": gamma_tilt_ref,
-    "V_box_z_max": hbar*omega_perp,
-    "w_box_z": 90e-6,
-    "s_box_z": 1e-6
+    "gamma_tilt_ref": gamma_tilt_ref
 }
 
 params_figure_main = {
-    'm_atom': m_Rb_87,
+    'm_atom': m_atom,
     'density_min': -0.2e20,
     'density_max': +2.2e20,
     'V_min': -1.0,
     'V_max': 11.0,
-    'abs_z_restr': 100e-6
+    'abs_z_restr': 30e-6
 }
+# =================================================================================================
+
+# =================================================================================================
+times_tof = 1e-3 * np.array([21.5, 24.5, 27.5, 28, 28.5, 29, 29.5, 30, 30.5, 31, 32.5, 33, 33.5, 34, 34.5, 35,
+                             40, 50, 60, 70, 80])
+
 # -------------------------------------------------------------------------------------------------
+T_tof_total = 20e-3
+T_tof_free_gpe = 1e-3
+# -------------------------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------------------------
+Jx_tof_free_gpe = 300
+Jy_tof_free_gpe = 300
+Jz_tof_free_gpe = 300
+# -------------------------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------------------------
+x_min_tof_final = -100e-6
+x_max_tof_final = +100e-6
+
+y_min_tof_final = -100e-6
+y_max_tof_final = +100e-6
+
+z_min_tof_final = -75e-6
+z_max_tof_final = +75e-6
+
+Jx_tof_final = 101
+Jy_tof_final = 101
+Jz_tof_final = 101
+# -------------------------------------------------------------------------------------------------
+
+params_tof = {
+    "Jx_tof_free_gpe": Jx_tof_free_gpe,
+    "Jy_tof_free_gpe": Jy_tof_free_gpe,
+    "Jz_tof_free_gpe": Jz_tof_free_gpe,
+    "x_min_tof_final": x_min_tof_final,
+    "y_min_tof_final": y_min_tof_final,
+    "z_min_tof_final": z_min_tof_final,
+    "x_max_tof_final": x_max_tof_final,
+    "y_max_tof_final": y_max_tof_final,
+    "z_max_tof_final": z_max_tof_final,
+    "Jx_tof_final": Jx_tof_final,
+    "Jy_tof_final": Jy_tof_final,
+    "Jz_tof_final": Jz_tof_final,
+    "T_tof_free_gpe": T_tof_free_gpe,
+    "T_tof_total": T_tof_total
+}
+# =================================================================================================
 
 # -------------------------------------------------------------------------------------------------
 simulation_id = params_potential['name']
@@ -167,6 +219,12 @@ if export_frames_figure_main:
     if not os.path.exists(path_frames_figure_main):
 
         os.makedirs(path_frames_figure_main)
+
+if export_frames_figure_tof:
+
+    if not os.path.exists(path_frames_figure_tof):
+
+        os.makedirs(path_frames_figure_tof)
 # -------------------------------------------------------------------------------------------------
 
 
@@ -178,7 +236,7 @@ solver = SolverGPE3D(m_atom=m_Rb_87,
                      a_s=a_s,
                      seed=1,
                      device='cuda:0',
-                     num_threads_cpu=num_threads_cpu)
+                     num_threads=num_threads_cpu)
 
 solver.init_grid(x_min=x_min,
                  x_max=x_max,
@@ -196,11 +254,6 @@ x = solver.get('x')
 y = solver.get('y')
 z = solver.get('z')
 
-
-# =================================================================================================
-# init time evolution
-# =================================================================================================
-
 # -------------------------------------------------------------------------------------------------
 solver.init_time_evolution(t_final=t_final, dt=dt)
 
@@ -215,6 +268,14 @@ times_analysis = times[0::n_mod_times_analysis]
 n_times_analysis = times_analysis.size
 
 assert (times_analysis[-1] == t_final)
+# -------------------------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------------------------
+times_tof = times_analysis.copy()
+
+indices_tmp = times_analysis >= 21.5e-3
+
+times_tof = times_tof[indices_tmp]
 # -------------------------------------------------------------------------------------------------
 
 
@@ -293,7 +354,7 @@ solver.set_V(u=[u1_0, u2_0])
 # -------------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
-solver.compute_ground_state_solution(N=N, n_iter=5000, tau_0=0.005e-3)
+solver.compute_ground_state_solution(N=N, n_iter=5000, tau=0.005e-3)
 
 psi_0 = solver.get('psi_0')
 
@@ -334,6 +395,8 @@ if visualization:
     figure_main = FigureMain(x, y, z, times, params_figure_main)
 
     figure_main.fig_control_inputs.update_u(u1_of_times, u2_of_times)
+
+    figure_main.fig_control_inputs.update_t(0.0)
     # ---------------------------------------------------------------------------------------------
 
     # ---------------------------------------------------------------------------------------------
@@ -360,8 +423,8 @@ if T > 0:
         mue_des=mue_psi_0,
         gamma=0.1,
         dt=dt,
-        filter_z1=-100e-6,
-        filter_z2=+100e-6,
+        filter_z1=-45e-6,
+        filter_z2=+45e-6,
         filter_z_s=1.0e-6
     )
 
@@ -383,6 +446,7 @@ if T > 0:
         print()
 
         if visualization:
+
             # -----------------------------------------------------------------------------------------
             figure_main.update_data(data)
 
@@ -468,6 +532,25 @@ stop = False
 
 n = 0
 
+if time_of_flight:
+
+    solver.init_time_of_flight(params_tof)
+
+    x_tof_gpe = solver.get('x_tof_free_gpe')
+    y_tof_gpe = solver.get('y_tof_free_gpe')
+    z_tof_gpe = solver.get('z_tof_free_gpe')
+
+    x_tof_final = solver.get('x_tof_final')
+    y_tof_final = solver.get('y_tof_final')
+    z_tof_final = solver.get('z_tof_final')
+
+    figure_tof = FigureTof(x_tof_gpe, y_tof_gpe, z_tof_gpe, x_tof_final, y_tof_final, z_tof_final)
+    # figure_tof = FigureTofExtended(x_tof_gpe, y_tof_gpe, z_tof_gpe, x_tof_final, y_tof_final, z_tof_final)
+
+else:
+
+    figure_tof = None
+
 while True:
 
     t = times[n]
@@ -510,6 +593,24 @@ while True:
 
             nr_frame_figure_main = nr_frame_figure_main + 1
         # -----------------------------------------------------------------------------------------
+
+    if time_of_flight:
+
+        if t in times_tof:
+
+            solver.compute_time_of_flight()
+
+            data_tof = eval_data_tof(solver)
+
+            figure_tof.update_data(data_tof)
+
+            if export_frames_figure_tof:
+
+                filepath = path_frames_figure_tof + 'frame_' + str(nr_frame_figure_tof).zfill(5) + '.png'
+
+                figure_tof.export(filepath)
+
+                nr_frame_figure_tof = nr_frame_figure_tof + 1
 
     nr_times_analysis = nr_times_analysis + 1
 

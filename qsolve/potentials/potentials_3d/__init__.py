@@ -5,3 +5,5 @@ from . potential_lesanovsky_xy_tilt_x_box_z import PotentialLesanovskyXYTiltXBox
 
 from . potential_harmonic_xy_lattice_z import PotentialHarmonicXYLatticeZ
 from . potential_harmonic_xy_gaussian_z import PotentialHarmonicXYGaussianZ
+
+from . potential_harmonic import PotentialHarmonic

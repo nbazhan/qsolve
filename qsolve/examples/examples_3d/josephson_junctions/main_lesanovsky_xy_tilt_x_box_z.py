@@ -61,10 +61,10 @@ export_hdf5 = False
 export_psi_of_times_analysis = False
 # -------------------------------------------------------------------------------------------------
 
-# =================================================================================================
-N = 14000
+# -------------------------------------------------------------------------------------------------
+N = 8100
 
-u1_final = 0.565
+u1_final = 0.56
 
 if quickstart:
 
@@ -100,6 +100,8 @@ dt = 0.0025e-3
 
 n_mod_times_analysis = 100
 
+omega_perp = 2 * np.pi * 3e3
+
 x_min = -2.8e-6
 x_max = +2.8e-6
 
@@ -112,16 +114,19 @@ z_max = +60e-6
 a_s = 5.24e-9
 
 params_potential = {
-    "name": 'lesanovsky_xy_tilt_x',
+    "name": 'lesanovsky_xy_tilt_x_box_z',
     "g_F": -1/2,
     "m_F": -1,
     "m_F_prime": -1,
-    "omega_perp": 2 * np.pi * 3e3,
+    "omega_perp": omega_perp,
     "omega_para": 2 * np.pi * 22.5,
     "omega_delta_detuning": -2 * np.pi * 50e3,
     "omega_trap_bottom": 2 * np.pi * 1216e3,
     "omega_rabi_ref": 2 * np.pi * 575e3,
-    "gamma_tilt_ref": gamma_tilt_ref
+    "gamma_tilt_ref": gamma_tilt_ref,
+    "V_box_z_max": hbar*omega_perp,
+    "w_box_z": 90e-6,
+    "s_box_z": 1e-6
 }
 
 params_figure_main = {
@@ -132,7 +137,7 @@ params_figure_main = {
     'V_max': 11.0,
     'abs_z_restr': 100e-6
 }
-# =================================================================================================
+# -------------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
 simulation_id = params_potential['name']
@@ -288,7 +293,7 @@ solver.set_V(u=[u1_0, u2_0])
 # -------------------------------------------------------------------------------------------------
 
 # -------------------------------------------------------------------------------------------------
-solver.compute_ground_state_solution(N=N, n_iter=5000, tau_0=0.005e-3)
+solver.compute_ground_state_solution(N=N, n_iter=5000, tau=0.005e-3)
 
 psi_0 = solver.get('psi_0')
 
