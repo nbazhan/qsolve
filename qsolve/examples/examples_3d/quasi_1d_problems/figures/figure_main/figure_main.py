@@ -204,7 +204,7 @@ class FigureMain(object):
         settings.framealpha = 1.0
         settings.fancybox = False
 
-        settings.colormap_density = colors.colormap_1
+        settings.colormap_density = colors.cmap_density
 
         settings.color_gridlines_major = colors.color_gridlines_major
         settings.color_gridlines_minor = colors.color_gridlines_minor

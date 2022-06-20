@@ -229,7 +229,7 @@ class FigureMain(object):
         settings.label_t = r'$t \;\, \mathrm{in} \;\, \mathrm{ms}$'
 
         # settings.cmap_density = plt.get_cmap('CMRmap')
-        settings.cmap_density = colors.colormap_1
+        settings.cmap_density = colors.cmap_density
 
         settings.cmap_phase = plt.get_cmap('PRGn')
         # settings.cmap_phase = colors.colormap_2
