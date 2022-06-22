@@ -7,6 +7,12 @@ def compute_ground_state_solution(self, kwargs):
 
     n_iter = kwargs["n_iter"]
 
+    if n_iter < 2500:
+
+        message = 'compute_ground_state_solution(self, **kwargs): n_iter should not be smaller than 2500'
+
+        raise Exception(message)
+
     if "adaptive_tau" in kwargs:
 
         adaptive_tau = kwargs["adaptive_tau"]

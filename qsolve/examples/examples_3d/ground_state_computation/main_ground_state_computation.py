@@ -268,7 +268,7 @@ solver.set_V(u=[u1_0, u2_0])
 
 
 # -------------------------------------------------------------------------------------------------
-solver.compute_ground_state_solution(N=N, n_iter=5000, tau=0.005e-3, adaptive_tau=True)
+solver.compute_ground_state_solution(N=N, n_iter=50000, tau=0.001e-3, adaptive_tau=True)
 
 psi_0 = solver.get('psi_0')
 
@@ -284,7 +284,6 @@ print('mue_psi_0 / h: {0:1.6} kHz'.format(mue_psi_0 / (1e3 * (2 * pi * hbar))))
 print('E_psi_0 / (N_psi_0*h): {0:1.6} kHz'.format(E_psi_0 / (1e3 * (2 * pi * hbar * N_psi_0))))
 print()
 # -------------------------------------------------------------------------------------------------
-
 
 # =================================================================================================
 # set wave function psi to ground state solution psi_0
@@ -330,8 +329,11 @@ ax_00 = fig.add_subplot(gridspec[0, 0])
 
 ax_00.set_yscale('log')
 
-x_values = vec_iter[1:]
-y_values = vec_res[1:]
+# x_values = vec_iter[1:]
+# y_values = vec_res[1:]
+
+x_values = vec_iter
+y_values = vec_res
 
 plt.plot(x_values, y_values, linewidth=1, linestyle='-', color='k')
 
